@@ -15,6 +15,8 @@ builder.Services.Configure<DbSettings>(
 
 builder.Services.AddSingleton<AppDbContext>();
 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
