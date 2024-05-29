@@ -1,5 +1,9 @@
+using Microsoft.Extensions.Options;
 using ToDoAPI.Data;
 using ToDoAPI.Models;
+using Microsoft.EntityFrameworkCore;
+using ToDoAPI.Contracts;
+using ToDoAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,10 +12,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.Configure<DbSettings>(
-    builder.Configuration.GetSection(nameof(DbSettings)));
+builder.Services.Configure<DbSettings>(builder.Configuration.GetSection(nameof(DbSettings)));
 
-builder.Services.AddSingleton<AppDbContext>();
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+{
+    var dbSettings = serviceProvider.GetRequiredService<IOptions<DbSettings>>().Value;
+    options.UseSqlServer(dbSettings.ConnectionString);
+});
+
+builder.Services.AddScoped<AppDbContext>();
+builder.Services.AddScoped<ITodoService, TodoService>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -28,13 +38,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+AppDbInitializer.Seed(app);
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
 app.MapControllers();
-
-
 
 app.Run();
 
